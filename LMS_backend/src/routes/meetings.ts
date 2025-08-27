@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireTeacherOrHead } = require('../middleware/roles');
+const { requireMeetingConduct } = require('../middleware/roles');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
 interface AuthRequest {
@@ -56,7 +56,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create meeting - Teacher/Head only
-router.post('/', authenticateToken, requireTeacherOrHead, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireMeetingConduct, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -123,7 +123,7 @@ router.post('/', authenticateToken, requireTeacherOrHead, async (req: AuthReques
 });
 
 // Update meeting - Teacher/Head only
-router.put('/:id', authenticateToken, requireTeacherOrHead, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, requireMeetingConduct, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { title, meetLink } = req.body;
@@ -171,7 +171,7 @@ router.put('/:id', authenticateToken, requireTeacherOrHead, async (req: AuthRequ
 });
 
 // Delete meeting - Teacher/Head only
-router.delete('/:id', authenticateToken, requireTeacherOrHead, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, requireMeetingConduct, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
 

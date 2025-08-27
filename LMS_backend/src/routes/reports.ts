@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireAdminRoles } = require('../middleware/roles');
+const { requireReportGeneration, requireActivityView } = require('../middleware/roles');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
 interface AuthRequest {
@@ -17,7 +17,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get enrollment statistics per course
-router.get('/enrollments', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/enrollments', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     const enrollmentStats = await prisma.course.findMany({
       select: {
@@ -49,7 +49,7 @@ router.get('/enrollments', authenticateToken, requireAdminRoles, async (req, res
 });
 
 // Get active courses overview
-router.get('/courses/active', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/courses/active', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     const activeCourses = await prisma.course.findMany({
       where: { active: true },
@@ -84,7 +84,7 @@ router.get('/courses/active', authenticateToken, requireAdminRoles, async (req, 
 });
 
 // Get student enrollment trends (monthly)
-router.get('/enrollments/trends', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/enrollments/trends', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     // Get enrollments grouped by month
     const enrollmentTrends = await prisma.$queryRaw`
@@ -105,7 +105,7 @@ router.get('/enrollments/trends', authenticateToken, requireAdminRoles, async (r
 });
 
 // Get course activity summary
-router.get('/courses/activity', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/courses/activity', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     const courseActivity = await prisma.course.findMany({
       select: {
@@ -142,7 +142,7 @@ router.get('/courses/activity', authenticateToken, requireAdminRoles, async (req
 });
 
 // Get user statistics
-router.get('/users/stats', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/users/stats', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     const userStats = await prisma.user.groupBy({
       by: ['role'],
@@ -164,7 +164,7 @@ router.get('/users/stats', authenticateToken, requireAdminRoles, async (req, res
 });
 
 // Get recent activities
-router.get('/activities/recent', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/activities/recent', authenticateToken, requireActivityView, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
 
@@ -183,7 +183,7 @@ router.get('/activities/recent', authenticateToken, requireAdminRoles, async (re
 });
 
 // Get course performance metrics
-router.get('/courses/performance', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/courses/performance', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     const coursePerformance = await prisma.course.findMany({
       select: {
@@ -227,8 +227,8 @@ router.get('/courses/performance', authenticateToken, requireAdminRoles, async (
   }
 });
 
-// Get recent activities - Admin/Head/Management only
-router.get('/activities/recent', authenticateToken, requireAdminRoles, async (req, res) => {
+// Get recent activities - Head/Admin only
+router.get('/activities/recent', authenticateToken, requireActivityView, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
 
@@ -257,7 +257,7 @@ router.get('/activities/recent', authenticateToken, requireAdminRoles, async (re
 });
 
 // Get activities by entity
-router.get('/activities/entity/:entity/:entityId', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/activities/entity/:entity/:entityId', authenticateToken, requireActivityView, async (req, res) => {
   try {
     const { entity, entityId } = req.params;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
@@ -291,7 +291,7 @@ router.get('/activities/entity/:entity/:entityId', authenticateToken, requireAdm
 });
 
 // Get system overview statistics
-router.get('/overview', authenticateToken, requireAdminRoles, async (req, res) => {
+router.get('/overview', authenticateToken, requireReportGeneration, async (req, res) => {
   try {
     // Get counts for various entities
     const [

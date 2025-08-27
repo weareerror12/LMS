@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireStaff, requireTeacherOrHead } = require('../middleware/roles');
+const { requireMaterialUpload, requireTeacherOrHead } = require('../middleware/roles');
 const { uploadToLocal, getLocalFilePath, deleteLocalFile, STORAGE_TYPE, isS3Configured } = require('../utils/s3Storage');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
@@ -103,8 +103,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Upload material - Staff only
-router.post('/', authenticateToken, requireStaff, upload.single('file'), async (req: AuthRequest, res) => {
+// Upload material - Admin, Teacher, Management only
+router.post('/', authenticateToken, requireMaterialUpload, upload.single('file'), async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -223,8 +223,8 @@ router.put('/:id', authenticateToken, requireTeacherOrHead, async (req: AuthRequ
   }
 });
 
-// Delete material - Staff only
-router.delete('/:id', authenticateToken, requireStaff, async (req, res) => {
+// Delete material - Admin, Teacher, Management only
+router.delete('/:id', authenticateToken, requireMaterialUpload, async (req, res) => {
   try {
     const { id } = req.params;
 

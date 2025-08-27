@@ -39,13 +39,57 @@ export const requireHead = requireRoles('HEAD');
 export const requireManagement = requireRoles('MANAGEMENT');
 export const requireStudent = requireRoles('STUDENT');
 
-// Combined role requirements
+// Granular permissions based on requirements
+
+// Admin permissions: Full system access
+export const requireAdminOnly = requireRoles('ADMIN');
+
+// Teacher permissions: Can manage own courses and materials
+export const requireTeacherOnly = requireRoles('TEACHER');
+
+// Head permissions: Can oversee everything and manage staff
+export const requireHeadOnly = requireRoles('HEAD');
+
+// Management permissions: Can add courses/materials and generate reports
+export const requireManagementOnly = requireRoles('MANAGEMENT');
+
+// Combined permissions for specific actions
+
+// Who can upload study materials: Admin, Teacher, Management
+export const requireMaterialUpload = requireRoles('ADMIN', 'TEACHER', 'MANAGEMENT');
+
+// Who can upload recorded lectures: Admin, Teacher
+export const requireLectureUpload = requireRoles('ADMIN', 'TEACHER');
+
+// Who can create courses: Admin, Management
+export const requireCourseCreation = requireRoles('ADMIN', 'MANAGEMENT');
+
+// Who can edit courses: Admin, Management (teachers can only edit their own)
+export const requireCourseEdit = requireRoles('ADMIN', 'MANAGEMENT');
+
+// Who can manage users (add/edit/delete): Admin, Head
+export const requireUserManagement = requireRoles('ADMIN', 'HEAD');
+
+// Who can conduct meetings: Teacher, Head
+export const requireMeetingConduct = requireRoles('TEACHER', 'HEAD');
+
+// Who can create notices: Teacher, Head, Admin
+export const requireNoticeCreation = requireRoles('TEACHER', 'HEAD', 'ADMIN');
+
+// Who can view all activities: Head, Admin
+export const requireActivityView = requireRoles('HEAD', 'ADMIN');
+
+// Who can generate reports: Management, Admin
+export const requireReportGeneration = requireRoles('MANAGEMENT', 'ADMIN');
+
+// Who can view student counts: Admin, Head, Teacher (own courses), Management
+export const requireStudentView = requireRoles('ADMIN', 'HEAD', 'TEACHER', 'MANAGEMENT');
+
+// Legacy combined roles for backward compatibility
 const requireAdminOrHead = requireRoles('ADMIN', 'HEAD');
 const requireTeacherOrHead = requireRoles('TEACHER', 'HEAD');
 const requireManagementOrHead = requireRoles('MANAGEMENT', 'HEAD');
 const requireStaff = requireRoles('ADMIN', 'TEACHER', 'HEAD', 'MANAGEMENT');
-
-// Unified admin roles (Admin, Head, Management all have same permissions)
 const requireAdminRoles = requireRoles('ADMIN', 'HEAD', 'MANAGEMENT');
 
 module.exports = {
@@ -59,5 +103,20 @@ module.exports = {
   requireTeacherOrHead,
   requireManagementOrHead,
   requireStaff,
-  requireAdminRoles
+  requireAdminRoles,
+  // New granular permissions
+  requireAdminOnly,
+  requireTeacherOnly,
+  requireHeadOnly,
+  requireManagementOnly,
+  requireMaterialUpload,
+  requireLectureUpload,
+  requireCourseCreation,
+  requireCourseEdit,
+  requireUserManagement,
+  requireMeetingConduct,
+  requireNoticeCreation,
+  requireActivityView,
+  requireReportGeneration,
+  requireStudentView
 };

@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireAdminRoles, requireTeacherOrHead, requireStaff } = require('../middleware/roles');
+const { requireCourseCreation, requireCourseEdit, requireTeacherOrHead, requireStudentView } = require('../middleware/roles');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -150,8 +150,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Create course - Teacher/Admin/Head/Management only
-router.post('/', authenticateToken, requireTeacherOrHead, async (req, res) => {
+// Create course - Admin/Management only
+router.post('/', authenticateToken, requireCourseCreation, async (req, res) => {
   try {
     const { title, description, teacherIds } = req.body;
 
@@ -204,8 +204,8 @@ router.post('/', authenticateToken, requireTeacherOrHead, async (req, res) => {
   }
 });
 
-// Update course - Teacher/Admin/Head/Management only (teachers can only update their own courses)
-router.put('/:id', authenticateToken, requireTeacherOrHead, async (req, res) => {
+// Update course - Admin/Management only (teachers can only update their own courses)
+router.put('/:id', authenticateToken, requireCourseEdit, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, active, teacherIds } = req.body;

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, FileText, Users, TrendingUp, BarChart3, Calendar, Plus, Eye, Download } from 'lucide-react';
+import { Video, Users, BookOpen, Calendar, Activity, Settings, Eye, UserPlus, TrendingUp, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import { Course, SystemOverview } from '../../types/api';
-import FileUpload from '../ui/FileUpload';
+import MeetingCreator from '../ui/MeetingCreator';
+import ActivityFeed from '../ui/ActivityFeed';
 
-const ManagementDashboard: React.FC = () => {
+const HeadDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -51,20 +52,16 @@ const ManagementDashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const handleUploadSuccess = () => {
+  const handleUserManagement = () => {
+    navigate('/admin/users');
+  };
+
+  const handleMeetingCreated = () => {
     fetchDashboardData();
   };
 
-  const handleCourseManagement = () => {
-    navigate('/admin/courses');
-  };
-
-  const handleReports = () => {
-    navigate('/admin/reports');
-  };
-
-  const handleViewEnrollments = () => {
-    navigate('/admin/enrollments');
+  const handleViewAllActivities = () => {
+    navigate('/admin/activities');
   };
 
   return (
@@ -94,9 +91,9 @@ const ManagementDashboard: React.FC = () => {
       )}
 
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-teal-500 to-blue-600 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Management Dashboard</h1>
-        <p className="text-teal-100">Oversee operations and generate insights</p>
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Head Dashboard</h1>
+        <p className="text-indigo-100">Oversee operations and manage staff</p>
       </div>
 
       {/* Statistics Cards */}
@@ -107,7 +104,7 @@ const ManagementDashboard: React.FC = () => {
               <Users className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600">Total Enrollments</h3>
+              <h3 className="text-sm font-medium text-gray-600">Total Students</h3>
               <p className="text-2xl font-bold text-gray-900">
                 {loading ? '...' : (systemOverview?.overview?.totalEnrollments ?? defaultOverview.totalEnrollments)}
               </p>
@@ -131,13 +128,13 @@ const ManagementDashboard: React.FC = () => {
 
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <FileText className="w-6 h-6 text-yellow-600" />
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Video className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600">Study Materials</h3>
+              <h3 className="text-sm font-medium text-gray-600">Total Meetings</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : (systemOverview?.overview?.totalMaterials ?? defaultOverview.totalMaterials)}
+                {loading ? '...' : (systemOverview?.overview?.totalMeetings ?? defaultOverview.totalMeetings)}
               </p>
             </div>
           </div>
@@ -145,13 +142,13 @@ const ManagementDashboard: React.FC = () => {
 
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Activity className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600">Total Courses</h3>
+              <h3 className="text-sm font-medium text-gray-600">Recent Activities</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : (systemOverview?.overview?.totalCourses ?? defaultOverview.totalCourses)}
+                {loading ? '...' : (systemOverview?.overview?.recentActivities ?? defaultOverview.recentActivities)}
               </p>
             </div>
           </div>
@@ -159,116 +156,101 @@ const ManagementDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Course Management */}
+        {/* Course Student Count */}
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center space-x-3 mb-4">
             <div className="p-2 bg-green-100 rounded-lg">
-              <BookOpen className="w-6 h-6 text-green-600" />
+              <Eye className="w-6 h-6 text-green-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Course Management</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Course Student Count</h2>
           </div>
 
-          <div className="space-y-3 mb-4">
-            <p className="text-sm text-gray-500 text-center py-8">Add and manage courses</p>
+          <div className="space-y-3">
+            {courses.length > 0 ? courses.map((course) => (
+              <div key={course.id} className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className="font-medium text-gray-900 text-sm">{course.title}</h3>
+                  <span className={`text-xs px-2 py-1 rounded ${course.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {course.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    <Users className="w-4 h-4 inline mr-1" />
+                    {course._count?.enrollments || 0} students
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    <BookOpen className="w-4 h-4 inline mr-1" />
+                    {course._count?.materials || 0} materials
+                  </span>
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-gray-500 text-center py-4">No courses available</p>
+            )}
           </div>
-
-          <button
-            onClick={handleCourseManagement}
-            className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Manage Courses
-          </button>
         </div>
 
-        {/* Material Upload */}
+        {/* Meeting Oversight */}
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <FileText className="w-6 h-6 text-yellow-600" />
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Video className="w-6 h-6 text-purple-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Add Study Materials</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Meeting Oversight</h2>
           </div>
 
           <div className="space-y-3 mb-4">
-            <p className="text-sm text-gray-500 text-center py-8">Upload study materials for courses</p>
+            <p className="text-sm text-gray-500 text-center py-8">Create and oversee meetings across all courses</p>
           </div>
 
-          <FileUpload
+          <MeetingCreator
             courses={courses}
-            onUploadSuccess={handleUploadSuccess}
-            uploadType="material"
+            onMeetingCreated={handleMeetingCreated}
           />
         </div>
       </div>
 
-      {/* Enrollment Oversight */}
+      {/* Management Tools */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Enrollments</h2>
-          <button
-            onClick={handleViewEnrollments}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            View All
-          </button>
-        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Management Tools</h2>
 
-        <div className="space-y-3">
-          {courses.length > 0 ? courses.slice(0, 5).map((course) => (
-            <div key={course.id} className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="font-medium text-gray-900 text-sm">{course.title}</h3>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {course._count?.enrollments || 0} students
-                </span>
-              </div>
-              <p className="text-sm text-gray-600">
-                {course.teachers.map(t => t.name).join(', ')} • {course.active ? 'Active' : 'Inactive'}
-              </p>
-            </div>
-          )) : (
-            <p className="text-sm text-gray-500 text-center py-4">No courses available</p>
-          )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={handleUserManagement}
+            className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left"
+          >
+            <UserPlus className="w-8 h-8 text-blue-600 mb-2" />
+            <h3 className="font-medium text-gray-900">Manage Staff</h3>
+            <p className="text-sm text-gray-600">Add and manage staff members</p>
+          </button>
+
+          <button
+            onClick={handleViewAllActivities}
+            className="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-left"
+          >
+            <Activity className="w-8 h-8 text-orange-600 mb-2" />
+            <h3 className="font-medium text-gray-900">View All Activities</h3>
+            <p className="text-sm text-gray-600">Monitor system-wide activities</p>
+          </button>
         </div>
       </div>
 
-      {/* Reports & Analytics */}
+      {/* Recent Activity */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Reports & Analytics</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Recent System Activities</h2>
           <button
-            onClick={handleReports}
-            className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left"
+            onClick={handleViewAllActivities}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
-            <BarChart3 className="w-8 h-8 text-purple-600 mb-2" />
-            <h3 className="font-medium text-gray-900">System Reports</h3>
-            <p className="text-sm text-gray-600">Generate comprehensive reports</p>
-          </button>
-
-          <button
-            onClick={handleViewEnrollments}
-            className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left"
-          >
-            <Users className="w-8 h-8 text-blue-600 mb-2" />
-            <h3 className="font-medium text-gray-900">Enrollment Analytics</h3>
-            <p className="text-sm text-gray-600">Track enrollment trends</p>
-          </button>
-
-          <button
-            onClick={handleCourseManagement}
-            className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left"
-          >
-            <TrendingUp className="w-8 h-8 text-green-600 mb-2" />
-            <h3 className="font-medium text-gray-900">Course Performance</h3>
-            <p className="text-sm text-gray-600">Monitor course metrics</p>
+            View All
           </button>
         </div>
+        <ActivityFeed limit={10} />
       </div>
     </div>
   );
 };
 
-export default ManagementDashboard;
+export default HeadDashboard;

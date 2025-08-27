@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireStaff } = require('../middleware/roles');
+const { requireNoticeCreation } = require('../middleware/roles');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
 interface AuthRequest {
@@ -72,8 +72,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Create notice - Staff only
-router.post('/', authenticateToken, requireStaff, async (req: AuthRequest, res) => {
+// Create notice - Teacher/Head/Admin only
+router.post('/', authenticateToken, requireNoticeCreation, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -135,8 +135,8 @@ router.post('/', authenticateToken, requireStaff, async (req: AuthRequest, res) 
   }
 });
 
-// Update notice - Staff only
-router.put('/:id', authenticateToken, requireStaff, async (req: AuthRequest, res) => {
+// Update notice - Teacher/Head/Admin only
+router.put('/:id', authenticateToken, requireNoticeCreation, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { title, body } = req.body;
@@ -176,8 +176,8 @@ router.put('/:id', authenticateToken, requireStaff, async (req: AuthRequest, res
   }
 });
 
-// Delete notice - Staff only
-router.delete('/:id', authenticateToken, requireStaff, async (req: AuthRequest, res) => {
+// Delete notice - Teacher/Head/Admin only
+router.delete('/:id', authenticateToken, requireNoticeCreation, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
 

@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
+const cors = require('cors');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -21,7 +22,33 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
 
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'https://urja-1.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+
+    console.log('Request origin:', origin);
+    console.log('Allowed origins:', allowedOrigins);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      // Temporarily allow all origins for debugging
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,6 +62,19 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
+  });
+});
+
+// CORS debug endpoint
+app.get('/cors-test', (req, res) => {
+  res.json({
+    message: 'CORS is working!',
+    origin: req.headers.origin,
+    allowedOrigins: [
+      'http://localhost:5173',
+      'https://urja-1.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean)
   });
 });
 
@@ -71,6 +111,11 @@ async function startServer() {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🌐 CORS Origins:`, [
+        'http://localhost:5173',
+        'https://urja-1.vercel.app',
+        process.env.FRONTEND_URL
+      ].filter(Boolean));
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

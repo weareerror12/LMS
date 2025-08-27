@@ -6,6 +6,9 @@ interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
   register: (userData: RegisterData) => Promise<boolean>;
+  isAdmin: () => boolean;
+  isTeacher: () => boolean;
+  isStudent: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,12 +88,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const isAdmin = (): boolean => {
+    return authState.user?.role === 'ADMIN' || authState.user?.role === 'HEAD' || authState.user?.role === 'MANAGEMENT';
+  };
+
+  const isTeacher = (): boolean => {
+    return authState.user?.role === 'TEACHER';
+  };
+
+  const isStudent = (): boolean => {
+    return authState.user?.role === 'STUDENT';
+  };
+
   return (
     <AuthContext.Provider value={{
       ...authState,
       login,
       logout,
-      register
+      register,
+      isAdmin,
+      isTeacher,
+      isStudent
     }}>
       {children}
     </AuthContext.Provider>

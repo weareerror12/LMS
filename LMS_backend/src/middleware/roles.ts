@@ -45,6 +45,9 @@ const requireTeacherOrHead = requireRoles('TEACHER', 'HEAD');
 const requireManagementOrHead = requireRoles('MANAGEMENT', 'HEAD');
 const requireStaff = requireRoles('ADMIN', 'TEACHER', 'HEAD', 'MANAGEMENT');
 
+// Unified admin roles (Admin, Head, Management all have same permissions)
+const requireAdminRoles = requireRoles('ADMIN', 'HEAD', 'MANAGEMENT');
+
 module.exports = {
   requireRoles,
   requireAdmin,
@@ -55,5 +58,6 @@ module.exports = {
   requireAdminOrHead,
   requireTeacherOrHead,
   requireManagementOrHead,
-  requireStaff
+  requireStaff,
+  requireAdminRoles
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Video, Users, Calendar, FileText, Settings, TrendingUp, Award, Bell, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
@@ -10,6 +11,7 @@ import ActivityFeed from '../ui/ActivityFeed';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
@@ -22,13 +24,15 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleUserManagement = () => {
-    // Navigate to user management page - implement based on your routing setup
-    window.location.href = '/admin/users';
+    navigate('/admin/users');
   };
 
   const handleCourseManagement = () => {
-    // Navigate to course management page - implement based on your routing setup
-    window.location.href = '/admin/courses';
+    navigate('/admin/courses');
+  };
+
+  const handleReports = () => {
+    navigate('/admin/reports');
   };
 
   const fetchDashboardData = async () => {
@@ -232,7 +236,7 @@ const AdminDashboard: React.FC = () => {
           >
             <Users className="w-8 h-8 text-blue-600 mb-2" />
             <h3 className="font-medium text-gray-900">User Management</h3>
-            <p className="text-sm text-gray-600">Manage students and teachers</p>
+            <p className="text-sm text-gray-600">Manage all users in the system</p>
           </button>
 
           <button
@@ -245,12 +249,12 @@ const AdminDashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={() => window.location.href = '/admin/reports'}
+            onClick={handleReports}
             className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left"
           >
             <TrendingUp className="w-8 h-8 text-purple-600 mb-2" />
             <h3 className="font-medium text-gray-900">Reports & Analytics</h3>
-            <p className="text-sm text-gray-600">View system insights</p>
+            <p className="text-sm text-gray-600">View system insights and analytics</p>
           </button>
         </div>
       </div>

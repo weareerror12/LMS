@@ -2,7 +2,7 @@ const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireAdminOrHead } = require('../middleware/roles');
+const { requireAdminRoles } = require('../middleware/roles');
 const { createActivity, ACTIVITY_ACTIONS } = require('../utils/activity');
 
 const router = Router();
@@ -18,8 +18,8 @@ interface AuthRequest {
   };
 }
 
-// Get all users - Admin/Head only
-router.get('/', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Get all users - Admin/Head/Management only
+router.get('/', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -48,8 +48,8 @@ router.get('/', authenticateToken, requireAdminOrHead, async (req, res) => {
   }
 });
 
-// Get user by ID - Admin/Head only
-router.get('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Get user by ID - Admin/Head/Management only
+router.get('/:id', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -92,8 +92,8 @@ router.get('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
   }
 });
 
-// Create user - Admin/Head only
-router.post('/', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Create user - Admin/Head/Management only
+router.post('/', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
 
@@ -155,8 +155,8 @@ router.post('/', authenticateToken, requireAdminOrHead, async (req, res) => {
   }
 });
 
-// Update user - Admin/Head only
-router.put('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Update user - Admin/Head/Management only
+router.put('/:id', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const { id } = req.params;
     const { email, name, role, password } = req.body;
@@ -220,8 +220,8 @@ router.put('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
   }
 });
 
-// Delete user - Admin/Head only
-router.delete('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Delete user - Admin/Head/Management only
+router.delete('/:id', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const { id } = req.params;
 

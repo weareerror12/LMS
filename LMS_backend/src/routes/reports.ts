@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireManagementOrHead } = require('../middleware/roles');
+const { requireAdminRoles } = require('../middleware/roles');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
 interface AuthRequest {
@@ -17,7 +17,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get enrollment statistics per course
-router.get('/enrollments', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/enrollments', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const enrollmentStats = await prisma.course.findMany({
       select: {
@@ -49,7 +49,7 @@ router.get('/enrollments', authenticateToken, requireManagementOrHead, async (re
 });
 
 // Get active courses overview
-router.get('/courses/active', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/courses/active', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const activeCourses = await prisma.course.findMany({
       where: { active: true },
@@ -84,7 +84,7 @@ router.get('/courses/active', authenticateToken, requireManagementOrHead, async 
 });
 
 // Get student enrollment trends (monthly)
-router.get('/enrollments/trends', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/enrollments/trends', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     // Get enrollments grouped by month
     const enrollmentTrends = await prisma.$queryRaw`
@@ -105,7 +105,7 @@ router.get('/enrollments/trends', authenticateToken, requireManagementOrHead, as
 });
 
 // Get course activity summary
-router.get('/courses/activity', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/courses/activity', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const courseActivity = await prisma.course.findMany({
       select: {
@@ -142,7 +142,7 @@ router.get('/courses/activity', authenticateToken, requireManagementOrHead, asyn
 });
 
 // Get user statistics
-router.get('/users/stats', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/users/stats', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const userStats = await prisma.user.groupBy({
       by: ['role'],
@@ -164,7 +164,7 @@ router.get('/users/stats', authenticateToken, requireManagementOrHead, async (re
 });
 
 // Get recent activities
-router.get('/activities/recent', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/activities/recent', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
 
@@ -183,7 +183,7 @@ router.get('/activities/recent', authenticateToken, requireManagementOrHead, asy
 });
 
 // Get course performance metrics
-router.get('/courses/performance', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/courses/performance', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const coursePerformance = await prisma.course.findMany({
       select: {
@@ -227,8 +227,8 @@ router.get('/courses/performance', authenticateToken, requireManagementOrHead, a
   }
 });
 
-// Get recent activities - Head only
-router.get('/activities/recent', authenticateToken, requireManagementOrHead, async (req, res) => {
+// Get recent activities - Admin/Head/Management only
+router.get('/activities/recent', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
 
@@ -257,7 +257,7 @@ router.get('/activities/recent', authenticateToken, requireManagementOrHead, asy
 });
 
 // Get activities by entity
-router.get('/activities/entity/:entity/:entityId', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/activities/entity/:entity/:entityId', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     const { entity, entityId } = req.params;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
@@ -291,7 +291,7 @@ router.get('/activities/entity/:entity/:entityId', authenticateToken, requireMan
 });
 
 // Get system overview statistics
-router.get('/overview', authenticateToken, requireManagementOrHead, async (req, res) => {
+router.get('/overview', authenticateToken, requireAdminRoles, async (req, res) => {
   try {
     // Get counts for various entities
     const [

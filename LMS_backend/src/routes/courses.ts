@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireAdminOrHead, requireTeacherOrHead, requireStaff } = require('../middleware/roles');
+const { requireAdminRoles, requireTeacherOrHead, requireStaff } = require('../middleware/roles');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -150,7 +150,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Create course - Teacher/Head/Admin only
+// Create course - Teacher/Admin/Head/Management only
 router.post('/', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { title, description, teacherIds } = req.body;
@@ -204,7 +204,7 @@ router.post('/', authenticateToken, requireTeacherOrHead, async (req, res) => {
   }
 });
 
-// Update course - Teacher/Head/Admin only (teachers can only update their own courses)
+// Update course - Teacher/Admin/Head/Management only (teachers can only update their own courses)
 router.put('/:id', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { id } = req.params;
@@ -286,7 +286,7 @@ router.put('/:id', authenticateToken, requireTeacherOrHead, async (req, res) => 
   }
 });
 
-// Delete course - Teacher/Head/Admin only (teachers can only delete their own courses)
+// Delete course - Teacher/Admin/Head/Management only (teachers can only delete their own courses)
 router.delete('/:id', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { id } = req.params;

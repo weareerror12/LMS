@@ -517,10 +517,18 @@ GET /api/reports/courses/performance
    ```bash
    npx prisma migrate dev
    ```
-5. **Start the server**
-   ```bash
-   npm run dev
-   ```
+5. **Seed the database (optional)**
+    ```bash
+    # Seed with sample Japanese language courses
+    npm run seed:levels
+
+    # Or seed with complete sample data (users, courses, enrollments, notices, meetings)
+    npm run seed:complete
+    ```
+6. **Start the server**
+    ```bash
+    npm run dev
+    ```
 
 ## Environment Variables
 
@@ -544,6 +552,58 @@ AWS_SECRET_ACCESS_KEY=your_secret_access_key
 AWS_REGION=us-east-1
 AWS_S3_BUCKET_NAME=your_bucket_name
 ```
+
+## Database Seeding
+
+The LMS comes with seed scripts to populate your database with sample data:
+
+### Available Seed Scripts
+
+#### 1. Japanese Language Courses (`seed:levels`)
+Creates the 4 Japanese language courses from the frontend levelData:
+- **Beginner** - N5 Level
+- **Elementary** - N4 Level
+- **Intermediate** - N3 Level
+- **Advanced** - N2-N1 Levels
+
+#### 2. Complete Sample Data (`seed:complete`)
+Creates a full sample LMS environment including:
+- **4 Sample Teachers** with different specializations
+- **3 Sample Students** enrolled in courses
+- **4 Japanese Language Courses** with teachers assigned
+- **Student Enrollments** in courses
+- **Sample Notices** (general and course-specific)
+- **Sample Meetings** with Google Meet links
+
+### Running Seed Scripts
+
+```bash
+# Seed only the Japanese language courses
+npm run seed:levels
+
+# Seed complete sample data (recommended for testing)
+npm run seed:complete
+
+# Or run all seeds
+npm run seed:all
+```
+
+### Sample Login Credentials
+
+After running `seed:complete`, you can log in with:
+
+```
+Admin: admin@example.com / admin123
+Teacher: yuki.sato@example.com / password123
+Student: student1@example.com / password123
+```
+
+### Seed Script Details
+
+- **Safe to run multiple times** - scripts check for existing data
+- **Hashed passwords** - all sample passwords are properly hashed
+- **Realistic data** - courses include descriptions and features
+- **Relationships maintained** - proper teacher assignments and enrollments
 
 ## File Structure
 

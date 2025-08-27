@@ -15,6 +15,19 @@ const AdminDashboard: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
+
+  // Default overview structure to prevent undefined errors
+  const defaultOverview = {
+    totalUsers: 0,
+    totalCourses: 0,
+    activeCourses: 0,
+    totalEnrollments: 0,
+    totalMaterials: 0,
+    totalLectures: 0,
+    totalMeetings: 0,
+    totalNotices: 0,
+    recentActivities: 0
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -43,17 +56,29 @@ const AdminDashboard: React.FC = () => {
         apiService.getSystemOverview()
       ]);
 
-      setCourses(coursesData.courses.slice(0, 5)); // Get first 5 courses
-      setSystemOverview(overviewData.overview);
+      console.log('Courses data:', coursesData);
+      console.log('Overview data:', overviewData);
+
+      setCourses(coursesData.courses?.slice(0, 5) || []); // Get first 5 courses
+      setSystemOverview(overviewData?.overview || null);
 
       // Fetch materials for the first course if available
-      if (coursesData.courses.length > 0) {
-        const materialsData = await apiService.getMaterials(coursesData.courses[0].id);
-        setMaterials(materialsData.materials.slice(0, 5)); // Get first 5 materials
+      if (coursesData.courses && coursesData.courses.length > 0) {
+        try {
+          const materialsData = await apiService.getMaterials(coursesData.courses[0].id);
+          setMaterials(materialsData.materials?.slice(0, 5) || []); // Get first 5 materials
+        } catch (materialsError) {
+          console.warn('Failed to fetch materials:', materialsError);
+          setMaterials([]);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
+      // Set default values to prevent undefined errors
+      setCourses([]);
+      setMaterials([]);
+      setSystemOverview(null);
     } finally {
       setLoading(false);
     }
@@ -105,7 +130,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-600">Total Students</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : systemOverview?.overview.totalEnrollments || 0}
+                {loading ? '...' : (systemOverview?.overview?.totalEnrollments ?? defaultOverview.totalEnrollments)}
               </p>
             </div>
           </div>
@@ -119,7 +144,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-600">Active Courses</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : systemOverview?.overview.activeCourses || 0}
+                {loading ? '...' : (systemOverview?.overview?.activeCourses ?? defaultOverview.activeCourses)}
               </p>
             </div>
           </div>
@@ -133,7 +158,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-600">Video Lectures</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : systemOverview?.overview.totalLectures || 0}
+                {loading ? '...' : (systemOverview?.overview?.totalLectures ?? defaultOverview.totalLectures)}
               </p>
             </div>
           </div>
@@ -147,7 +172,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-600">Study Materials</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : systemOverview?.overview.totalMaterials || 0}
+                {loading ? '...' : (systemOverview?.overview?.totalMaterials ?? defaultOverview.totalMaterials)}
               </p>
             </div>
           </div>

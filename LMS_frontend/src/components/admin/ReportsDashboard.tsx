@@ -6,6 +6,19 @@ import { EnrollmentStats, SystemOverview } from '../../types/api';
 const ReportsDashboard: React.FC = () => {
   const [enrollmentStats, setEnrollmentStats] = useState<EnrollmentStats | null>(null);
   const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
+
+  // Default overview structure to prevent undefined errors
+  const defaultOverview = {
+    totalUsers: 0,
+    totalCourses: 0,
+    activeCourses: 0,
+    totalEnrollments: 0,
+    totalMaterials: 0,
+    totalLectures: 0,
+    totalMeetings: 0,
+    totalNotices: 0,
+    recentActivities: 0
+  };
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'courses' | 'users'>('overview');
 
@@ -104,7 +117,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Total Users</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalUsers}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalUsers ?? defaultOverview.totalUsers}</p>
               </div>
             </div>
           </div>
@@ -116,7 +129,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Total Courses</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalCourses}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalCourses ?? defaultOverview.totalCourses}</p>
               </div>
             </div>
           </div>
@@ -128,7 +141,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Total Enrollments</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalEnrollments}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalEnrollments ?? defaultOverview.totalEnrollments}</p>
               </div>
             </div>
           </div>
@@ -140,7 +153,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Study Materials</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalMaterials}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalMaterials ?? defaultOverview.totalMaterials}</p>
               </div>
             </div>
           </div>
@@ -152,7 +165,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Video Lectures</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalLectures}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalLectures ?? defaultOverview.totalLectures}</p>
               </div>
             </div>
           </div>
@@ -164,7 +177,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Meetings</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalMeetings}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalMeetings ?? defaultOverview.totalMeetings}</p>
               </div>
             </div>
           </div>
@@ -176,7 +189,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Notices</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.totalNotices}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.totalNotices ?? defaultOverview.totalNotices}</p>
               </div>
             </div>
           </div>
@@ -188,7 +201,7 @@ const ReportsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Active Courses</h3>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview.activeCourses}</p>
+                <p className="text-2xl font-bold text-gray-900">{systemOverview.overview?.activeCourses ?? defaultOverview.activeCourses}</p>
               </div>
             </div>
           </div>

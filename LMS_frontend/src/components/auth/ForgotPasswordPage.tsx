@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Mail, ArrowLeft } from 'lucide-react';
 import Logo from '../ui/Logo';
+import apiService from '../../services/api';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -22,23 +23,10 @@ const ForgotPasswordPage: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(data.message);
-      } else {
-        setError(data.error || 'An error occurred');
-      }
+      const data = await apiService.requestPasswordReset(email);
+      setSuccess(data.message);
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err instanceof Error ? err.message : 'Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }

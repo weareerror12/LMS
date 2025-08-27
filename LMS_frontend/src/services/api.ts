@@ -171,6 +171,27 @@ class ApiService {
     );
   }
 
+  async uploadLectureRecording(lectureId: string, videoFile: File) {
+    const formData = new FormData();
+    formData.append('video', videoFile);
+
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${this.baseURL}/lectures/${lectureId}/record`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` })
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
   // Meetings
   async getMeetings(courseId: string) {
     return await this.request<{ meetings: any[] }>(`/meetings/course/${courseId}`);
@@ -217,6 +238,43 @@ class ApiService {
 
   async getSystemOverview() {
     return await this.request<{ overview: any }>('/reports/overview');
+  }
+
+  // Password reset
+  async requestPasswordReset(email: string) {
+    const response = await fetch(`${this.baseURL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send reset email');
+    }
+
+    return data;
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const response = await fetch(`${this.baseURL}/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to reset password');
+    }
+
+    return data;
   }
 
   // Logout helper

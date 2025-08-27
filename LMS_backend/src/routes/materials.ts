@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireStaff } = require('../middleware/roles');
+const { requireStaff, requireTeacherOrHead } = require('../middleware/roles');
 const { uploadToLocal, getLocalFilePath, deleteLocalFile, STORAGE_TYPE, isS3Configured } = require('../utils/s3Storage');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
@@ -168,19 +168,38 @@ router.post('/', authenticateToken, requireStaff, upload.single('file'), async (
   }
 });
 
-// Update material - Staff only
-router.put('/:id', authenticateToken, requireStaff, async (req: AuthRequest, res) => {
+// Update material - Staff only (teachers can update materials for their own courses)
+router.put('/:id', authenticateToken, requireTeacherOrHead, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { title, type } = req.body;
 
-    // Check if material exists
+    // Check if material exists with course information
     const existingMaterial = await prisma.material.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        course: {
+          include: {
+            teachers: {
+              select: {
+                id: true
+              }
+            }
+          }
+        }
+      }
     });
 
     if (!existingMaterial) {
       return res.status(404).json({ error: 'Material not found' });
+    }
+
+    // Check if teacher has permission to update this material
+    if (req.user.role === 'TEACHER') {
+      const isTeacherOfCourse = existingMaterial.course.teachers.some(teacher => teacher.id === req.user.id);
+      if (!isTeacherOfCourse) {
+        return res.status(403).json({ error: 'You can only update materials for courses you teach' });
+      }
     }
 
     // Prepare update data

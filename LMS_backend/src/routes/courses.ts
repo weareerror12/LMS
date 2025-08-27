@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireAdminOrHead, requireStaff } = require('../middleware/roles');
+const { requireAdminOrHead, requireTeacherOrHead, requireStaff } = require('../middleware/roles');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -150,8 +150,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Create course - Admin/Head only
-router.post('/', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Create course - Teacher/Head/Admin only
+router.post('/', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { title, description, teacherIds } = req.body;
 
@@ -204,19 +204,34 @@ router.post('/', authenticateToken, requireAdminOrHead, async (req, res) => {
   }
 });
 
-// Update course - Admin/Head only
-router.put('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Update course - Teacher/Head/Admin only (teachers can only update their own courses)
+router.put('/:id', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, active, teacherIds } = req.body;
 
     // Check if course exists
     const existingCourse = await prisma.course.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        teachers: {
+          select: {
+            id: true
+          }
+        }
+      }
     });
 
     if (!existingCourse) {
       return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // Check if teacher has permission to update this course
+    if (req.user.role === 'TEACHER') {
+      const isTeacherOfCourse = existingCourse.teachers.some(teacher => teacher.id === req.user.id);
+      if (!isTeacherOfCourse) {
+        return res.status(403).json({ error: 'You can only update courses you teach' });
+      }
     }
 
     // Prepare update data
@@ -271,18 +286,33 @@ router.put('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
   }
 });
 
-// Delete course - Admin/Head only
-router.delete('/:id', authenticateToken, requireAdminOrHead, async (req, res) => {
+// Delete course - Teacher/Head/Admin only (teachers can only delete their own courses)
+router.delete('/:id', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { id } = req.params;
 
     // Check if course exists
     const existingCourse = await prisma.course.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        teachers: {
+          select: {
+            id: true
+          }
+        }
+      }
     });
 
     if (!existingCourse) {
       return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // Check if teacher has permission to delete this course
+    if (req.user.role === 'TEACHER') {
+      const isTeacherOfCourse = existingCourse.teachers.some(teacher => teacher.id === req.user.id);
+      if (!isTeacherOfCourse) {
+        return res.status(403).json({ error: 'You can only delete courses you teach' });
+      }
     }
 
     // Delete course (this will cascade delete related records)

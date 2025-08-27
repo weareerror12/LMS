@@ -141,6 +141,16 @@ class ApiService {
     return await response.json();
   }
 
+  async updateMaterial(materialId: string, updateData: { title?: string; type?: string }) {
+    return await this.request<{ material: any; message: string }>(
+      `/materials/${materialId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      }
+    );
+  }
+
   async downloadMaterial(materialId: string) {
     const token = localStorage.getItem('auth_token');
     const response = await fetch(`${this.baseURL}/materials/${materialId}/download`, {

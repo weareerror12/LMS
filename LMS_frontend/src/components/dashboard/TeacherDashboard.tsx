@@ -4,6 +4,9 @@ import { Video, FileText, Calendar, Users, BookOpen, MessageSquare } from 'lucid
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import { Course } from '../../types/api';
+import FileUpload from '../ui/FileUpload';
+import MeetingCreator from '../ui/MeetingCreator';
+import NoticeCreator from '../ui/NoticeCreator';
 
 const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -11,22 +14,22 @@ const TeacherDashboard: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTeacherData = async () => {
-      try {
-        const coursesData = await apiService.getCourses();
-        // Filter courses to only show those taught by current teacher
-        const teacherCourses = coursesData.courses.filter(course =>
-          course.teachers.some((teacher: any) => teacher.id === user?.id)
-        );
-        setCourses(teacherCourses);
-      } catch (error) {
-        console.error('Failed to fetch teacher data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTeacherData = async () => {
+    try {
+      const coursesData = await apiService.getCourses();
+      // Filter courses to only show those taught by current teacher
+      const teacherCourses = coursesData.courses.filter(course =>
+        course.teachers.some((teacher: any) => teacher.id === user?.id)
+      );
+      setCourses(teacherCourses);
+    } catch (error) {
+      console.error('Failed to fetch teacher data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (user) {
       fetchTeacherData();
     }
@@ -36,16 +39,18 @@ const TeacherDashboard: React.FC = () => {
     navigate(`/course/${course.id}`);
   };
 
-  const handleUploadMaterials = () => {
-    alert('Upload Materials functionality would open a file upload dialog here.');
+  const handleUploadSuccess = () => {
+    // Refresh teacher data after successful upload
+    fetchTeacherData();
   };
 
   const handleViewStudents = () => {
-    alert('View Students functionality would show a list of enrolled students.');
+    navigate('/students');
   };
 
   const handleScheduleClass = () => {
-    alert('Schedule Class functionality would open a scheduling form.');
+    // Scroll to meeting creator section
+    document.getElementById('meeting-creator')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -130,9 +135,11 @@ const TeacherDashboard: React.FC = () => {
             )}
           </div>
           
-          <button className="w-full py-2 px-4 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors">
-            Create New Note
-          </button>
+          <FileUpload
+            courses={courses}
+            onUploadSuccess={handleUploadSuccess}
+            uploadType="material"
+          />
         </div>
       </div>
 
@@ -141,14 +148,16 @@ const TeacherDashboard: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <button
-            onClick={handleUploadMaterials}
-            className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left"
-          >
+          <div className="p-4 bg-green-50 rounded-lg text-left">
             <BookOpen className="w-8 h-8 text-green-600 mb-2" />
-            <h3 className="font-medium text-gray-900">Upload Materials</h3>
-            <p className="text-sm text-gray-600">Share study resources</p>
-          </button>
+            <h3 className="font-medium text-gray-900 mb-2">Upload Materials</h3>
+            <p className="text-sm text-gray-600 mb-4">Share study resources</p>
+            <FileUpload
+              courses={courses}
+              onUploadSuccess={handleUploadSuccess}
+              uploadType="material"
+            />
+          </div>
 
           <button
             onClick={handleViewStudents}
@@ -173,6 +182,47 @@ const TeacherDashboard: React.FC = () => {
             <h3 className="font-medium text-gray-900">Class Discussion</h3>
             <p className="text-sm text-gray-600">Engage with students</p>
           </button> */}
+        </div>
+      </div>
+
+      {/* Teacher Tools */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Create Meeting */}
+        <div id="meeting-creator" className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Video className="w-6 h-6 text-blue-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Schedule Meeting</h2>
+          </div>
+
+          <div className="space-y-3 mb-4">
+            <p className="text-sm text-gray-500 text-center py-4">Create online meetings for your courses</p>
+          </div>
+
+          <MeetingCreator
+            courses={courses}
+            onMeetingCreated={handleUploadSuccess}
+          />
+        </div>
+
+        {/* Create Notice */}
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <MessageSquare className="w-6 h-6 text-orange-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Post Notice</h2>
+          </div>
+
+          <div className="space-y-3 mb-4">
+            <p className="text-sm text-gray-500 text-center py-4">Share announcements with your students</p>
+          </div>
+
+          <NoticeCreator
+            courses={courses}
+            onNoticeCreated={handleUploadSuccess}
+          />
         </div>
       </div>
 

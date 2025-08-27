@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, Globe, ChevronDown } from 'lucide-react';
 import { Link } from './ui/Link';
 import Logo from './ui/Logo';
+import NotificationBell from './ui/NotificationBell';
+import { Notice } from '../types/api';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -47,11 +49,12 @@ const Header: React.FC = () => {
         </nav>
 
         <div className="hidden md:flex items-center space-x-4">
+          <NotificationBell />
           <button className="flex items-center text-sm font-medium text-gray-600">
             <Globe size={16} className="mr-1" /> EN <ChevronDown size={14} />
           </button>
-          <Link 
-            href="/login" 
+          <Link
+            href="/login"
             className={`px-4 py-2 rounded-md font-medium transition-colors ${
               isScrolled ? 'text-indigo-600 hover:text-indigo-800' : 'text-white hover:text-indigo-100'
             }`}

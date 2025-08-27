@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "seed:levels": "node seed-levels.js",
     "seed:complete": "node seed-complete.js",
-    "seed:all": "npm run seed:complete"
+    "seed:jlpt": "node seed-jlpt-courses.js",
+    "seed:all": "npm run seed:complete && npm run seed:jlpt"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.876.0",

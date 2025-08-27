@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireCourseCreation, requireCourseEdit, requireTeacherOrHead, requireStudentView } = require('../middleware/roles');
+const { requireCourseCreation, requireCourseEdit, requireTeacherOrHead, requireStudentView, requireUserManagement } = require('../middleware/roles');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -448,7 +448,7 @@ router.post('/:id/enroll', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Unenroll student from course
-router.delete('/:id/enroll/:studentId', authenticateToken, requireStaff, async (req, res) => {
+router.delete('/:id/enroll/:studentId', authenticateToken, requireTeacherOrHead, async (req, res) => {
   try {
     const { id: courseId, studentId } = req.params;
 

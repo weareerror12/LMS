@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireStaff } = require('../middleware/roles');
+const { requireLectureUpload } = require('../middleware/roles');
 const { uploadToLocal, getLocalFilePath, deleteLocalFile, STORAGE_TYPE, isS3Configured } = require('../utils/s3Storage');
 
 // Define AuthRequest interface locally since we can't import types in CommonJS
@@ -93,8 +93,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Create lecture - Staff only
-router.post('/', authenticateToken, requireStaff, async (req: AuthRequest, res) => {
+// Create lecture - Admin, Teacher, Management only
+router.post('/', authenticateToken, requireLectureUpload, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -142,8 +142,8 @@ router.post('/', authenticateToken, requireStaff, async (req: AuthRequest, res) 
   }
 });
 
-// Update lecture - Staff only
-router.put('/:id', authenticateToken, requireStaff, async (req: AuthRequest, res) => {
+// Update lecture - Admin, Teacher, Management only
+router.put('/:id', authenticateToken, requireLectureUpload, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { title, scheduledAt } = req.body;
@@ -184,8 +184,8 @@ router.put('/:id', authenticateToken, requireStaff, async (req: AuthRequest, res
   }
 });
 
-// Upload recorded video for lecture - Staff only
-router.post('/:id/record', authenticateToken, requireStaff, upload.single('video'), async (req: AuthRequest, res) => {
+// Upload recorded video for lecture - Admin, Teacher, Management only
+router.post('/:id/record', authenticateToken, requireLectureUpload, upload.single('video'), async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const file = req.file;
@@ -237,8 +237,8 @@ router.post('/:id/record', authenticateToken, requireStaff, upload.single('video
   }
 });
 
-// Delete lecture - Staff only
-router.delete('/:id', authenticateToken, requireStaff, async (req, res) => {
+// Delete lecture - Admin, Teacher, Management only
+router.delete('/:id', authenticateToken, requireLectureUpload, async (req, res) => {
   try {
     const { id } = req.params;
 

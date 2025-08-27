@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
-const { requireAdminRoles } = require('../middleware/roles');
+const { requireUserManagement } = require('../middleware/roles');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -82,8 +82,8 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Admin registration endpoint - Only Admin/Head/Management can create users with any role
-router.post('/register/admin', authenticateToken, requireAdminRoles, async (req, res) => {
+// Admin registration endpoint - Only Admin/Head can create users with any role
+router.post('/register/admin', authenticateToken, requireUserManagement, async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
 

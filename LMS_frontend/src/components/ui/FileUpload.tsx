@@ -19,6 +19,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ courses, onUploadSuccess, uploa
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Debug: Log courses prop to check what's being passed
+  console.log('FileUpload courses prop:', courses);
+  console.log('Courses length:', courses?.length || 0);
+  console.log('Filtered courses:', courses?.filter(course => course && course.id && course.title) || []);
+
+  // Check if courses is loading or empty
+  const validCourses = courses?.filter(course => course && course.id && course.title) || [];
+  const isLoadingCourses = !courses || courses.length === 0;
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -134,11 +143,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ courses, onUploadSuccess, uploa
                   required
                 >
                   <option value="">Choose a course...</option>
-                  {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.title}
-                    </option>
-                  ))}
+                  {isLoadingCourses ? (
+                    <option value="" disabled>Loading courses...</option>
+                  ) : validCourses.length > 0 ? (
+                    validCourses.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.title}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No courses available</option>
+                  )}
                 </select>
               </div>
 

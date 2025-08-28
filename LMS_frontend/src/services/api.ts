@@ -85,9 +85,65 @@ class ApiService {
     );
   }
 
+  async updateUser(userId: string, userData: { email?: string; name?: string; role?: string; password?: string }) {
+    return await this.request<{ user: any; message: string }>(
+      `/users/${userId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(userData)
+      }
+    );
+  }
+
+  async deleteUser(userId: string) {
+    return await this.request<{ message: string }>(
+      `/users/${userId}`,
+      {
+        method: 'DELETE'
+      }
+    );
+  }
+
   // Course management
   async getCourses() {
     return await this.request<{ courses: any[] }>('/courses');
+  }
+
+  /**
+   * Get courses for a specific teacher
+   * @param teacherInfo - Optional teacher information. If not provided, uses current authenticated user
+   * @returns Promise with courses array
+   *
+   * Usage examples:
+   * - apiService.getMyCourses() // Uses current authenticated user
+   * - apiService.getMyCourses({ teacherId: '123', teacherEmail: 'teacher@example.com' }) // Specific teacher
+   */
+  async getMyCourses(teacherInfo?: { teacherId: string; teacherEmail: string; teacherRole?: string }) {
+    // If teacherInfo is provided, send it in the request body
+    if (teacherInfo) {
+      return await this.request<{ courses: any[] }>('/courses/my-courses', {
+        method: 'POST',
+        body: JSON.stringify(teacherInfo)
+      });
+    }
+    // Otherwise, use the current authenticated user
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // Decode JWT to get current user info
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const teacherInfoFromToken = {
+      teacherId: payload.id,
+      teacherEmail: payload.email,
+      teacherRole: payload.role
+    };
+
+    return await this.request<{ courses: any[] }>('/courses/my-courses', {
+      method: 'POST',
+      body: JSON.stringify(teacherInfoFromToken)
+    });
   }
 
   async getActiveCourses() {
@@ -108,12 +164,41 @@ class ApiService {
     );
   }
 
+  async updateCourse(courseId: string, courseData: { title?: string; description?: string; active?: boolean; teacherIds?: string[] }) {
+    return await this.request<{ course: any; message: string }>(
+      `/courses/${courseId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(courseData)
+      }
+    );
+  }
+
+  async deleteCourse(courseId: string) {
+    return await this.request<{ message: string }>(
+      `/courses/${courseId}`,
+      {
+        method: 'DELETE'
+      }
+    );
+  }
+
   async enrollInCourse(courseId: string, studentId?: string) {
     return await this.request<{ enrollment: any; message: string }>(
       `/courses/${courseId}/enroll`,
       {
         method: 'POST',
         body: JSON.stringify(studentId ? { studentId } : {})
+      }
+    );
+  }
+
+  async bulkEnrollStudents(courseId: string, studentIds: string[]) {
+    return await this.request<{ message: string; results: any }>(
+      `/courses/${courseId}/bulk-enroll`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ studentIds })
       }
     );
   }
@@ -125,7 +210,9 @@ class ApiService {
 
   async uploadMaterial(formData: FormData) {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch(`${this.baseURL}/materials`, {
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/api/materials`, {
       method: 'POST',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` })
@@ -151,9 +238,37 @@ class ApiService {
     );
   }
 
+  async deleteMaterial(materialId: string) {
+    return await this.request<{ message: string }>(
+      `/materials/${materialId}`,
+      {
+        method: 'DELETE'
+      }
+    );
+  }
+
   async downloadMaterial(materialId: string) {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch(`${this.baseURL}/materials/${materialId}/download`, {
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/api/materials/${materialId}/download`, {
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` })
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.blob();
+  }
+
+  async viewMaterial(materialId: string) {
+    const token = localStorage.getItem('auth_token');
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/api/materials/${materialId}/view`, {
       headers: {
         ...(token && { Authorization: `Bearer ${token}` })
       }
@@ -186,7 +301,9 @@ class ApiService {
     formData.append('video', videoFile);
 
     const token = localStorage.getItem('auth_token');
-    const response = await fetch(`${this.baseURL}/lectures/${lectureId}/record`, {
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/api/lectures/${lectureId}/record`, {
       method: 'POST',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` })
@@ -200,6 +317,23 @@ class ApiService {
     }
 
     return await response.json();
+  }
+
+  async streamLecture(lectureId: string) {
+    const token = localStorage.getItem('auth_token');
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/lectures/${lectureId}/stream`, {
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` })
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.blob();
   }
 
   // Meetings
@@ -218,7 +352,9 @@ class ApiService {
   }
 
   async joinMeeting(meetingId: string) {
-    window.location.href = `${this.baseURL}/meetings/${meetingId}/join`;
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    window.location.href = `${baseUrlWithoutApi}/api/meetings/${meetingId}/join`;
   }
 
   // Notices
@@ -250,9 +386,28 @@ class ApiService {
     return await this.request<{ overview: any }>('/reports/overview');
   }
 
+  async getUserStats() {
+    return await this.request<{ userStats: any[]; totalUsers: number }>('/reports/users/stats');
+  }
+
+  // Activities
+  async getRecentActivities(limit: number = 50) {
+    return await this.request<{ activities: any[] }>(`/activities/recent?limit=${limit}`);
+  }
+
+  async getActivitiesByEntity(entity: string, entityId: string, limit: number = 20) {
+    return await this.request<{ activities: any[] }>(`/activities/entity/${entity}/${entityId}?limit=${limit}`);
+  }
+
+  async getActivitiesByActor(actorId: string, limit: number = 20) {
+    return await this.request<{ activities: any[] }>(`/activities/actor/${actorId}?limit=${limit}`);
+  }
+
   // Password reset
   async requestPasswordReset(email: string) {
-    const response = await fetch(`${this.baseURL}/auth/forgot-password`, {
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/api/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -270,7 +425,9 @@ class ApiService {
   }
 
   async resetPassword(token: string, newPassword: string) {
-    const response = await fetch(`${this.baseURL}/auth/reset-password`, {
+    // Remove /api from baseURL since endpoint already includes it
+    const baseUrlWithoutApi = this.baseURL.replace('/api', '');
+    const response = await fetch(`${baseUrlWithoutApi}/api/auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -285,6 +442,69 @@ class ApiService {
     }
 
     return data;
+  }
+
+  // Recent enrollments for management dashboard
+  async getRecentEnrollments(limit: number = 10) {
+    return await this.request<{ enrollments: any[] }>(`/courses/recent-enrollments?limit=${limit}`);
+  }
+
+  // Approve enrollment
+  async approveEnrollment(courseId: string, enrollmentId: string) {
+    return await this.request<{ message: string; enrollment: any }>(
+      `/courses/${courseId}/enroll/${enrollmentId}/approve`,
+      {
+        method: 'POST'
+      }
+    );
+  }
+
+  // Teacher dashboard APIs
+  async getUpcomingClasses() {
+    return await this.request<{ classes: any[] }>('/courses/upcoming-classes');
+  }
+
+  async getTeacherStats() {
+    return await this.request<{ stats: any }>('/courses/teacher-stats');
+  }
+
+
+  async getRecentMaterials(limit: number = 10) {
+    return await this.request<{ materials: any[] }>(`/courses/recent-materials?limit=${limit}`);
+  }
+
+  async getAllRecentMaterials(){
+    return await this.request<{materials:any[]}>(`/courses/recent-all-materials`);
+  }
+  
+
+  async getRecentVideos(limit: number = 10) {
+    return await this.request<{ videos: any[] }>(`/courses/recent-videos?limit=${limit}`);
+  }
+
+  // Admin dashboard - Get all materials and recordings
+  async getAdminMaterials(limit: number = 50) {
+    return await this.request<{
+      materials: any[];
+      recordings: any[];
+      totalMaterials: number;
+      totalRecordings: number;
+      totalItems: number;
+    }>(`/materials/admin/all?limit=${limit}`);
+  }
+
+  // Admin dashboard - Get material statistics
+  async getAdminMaterialStats() {
+    return await this.request<{
+      stats: {
+        totalMaterials: number;
+        totalRecordings: number;
+        totalContent: number;
+        recentMaterialsCount: number;
+        recentRecordingsCount: number;
+        recentContentCount: number;
+      }
+    }>('/materials/admin/stats');
   }
 
   // Logout helper

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, Upload, Play, FileText, Loader2, Plus, Edit, Trash2 } from 'lucide-react';
 import { Course, Lecture } from '../../types/api';
 import apiService from '../../services/api';
+import VideoPlayer from '../ui/VideoPlayer';
 
 const LectureManagement: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -10,6 +11,8 @@ const LectureManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState<string | null>(null);
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false);
+  const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
   const [error, setError] = useState('');
 
   // Form state
@@ -108,6 +111,16 @@ const LectureManagement: React.FC = () => {
     return new Date(scheduledAt) > new Date();
   };
 
+  const handleViewLecture = (lecture: Lecture) => {
+    setSelectedLecture(lecture);
+    setVideoPlayerOpen(true);
+  };
+
+  const handleCloseVideoPlayer = () => {
+    setVideoPlayerOpen(false);
+    setSelectedLecture(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -203,7 +216,10 @@ const LectureManagement: React.FC = () => {
 
                         <div className="flex items-center space-x-2 ml-4">
                           {lecture.recordPath ? (
-                            <button className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors">
+                            <button
+                              onClick={() => handleViewLecture(lecture)}
+                              className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                            >
                               <Play className="w-4 h-4 mr-1" />
                               Play Recording
                             </button>
@@ -340,6 +356,15 @@ const LectureManagement: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Video Player Modal */}
+      {videoPlayerOpen && selectedLecture && (
+        <VideoPlayer
+          lectureId={selectedLecture.id}
+          lectureTitle={selectedLecture.title}
+          onClose={handleCloseVideoPlayer}
+        />
       )}
     </div>
   );

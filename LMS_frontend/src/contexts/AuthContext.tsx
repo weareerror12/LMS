@@ -6,9 +6,22 @@ interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
   register: (userData: RegisterData) => Promise<boolean>;
+  // Role checking methods
   isAdmin: () => boolean;
   isTeacher: () => boolean;
+  isHead: () => boolean;
+  isManagement: () => boolean;
   isStudent: () => boolean;
+  // Permission checking methods
+  canManageUsers: () => boolean;
+  canCreateCourses: () => boolean;
+  canEditCourses: () => boolean;
+  canUploadMaterials: () => boolean;
+  canUploadLectures: () => boolean;
+  canConductMeetings: () => boolean;
+  canCreateNotices: () => boolean;
+  canViewReports: () => boolean;
+  canViewActivities: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,16 +101,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Role checking methods
   const isAdmin = (): boolean => {
-    return authState.user?.role === 'ADMIN' || authState.user?.role === 'HEAD' || authState.user?.role === 'MANAGEMENT';
+    return authState.user?.role === 'ADMIN';
   };
 
   const isTeacher = (): boolean => {
     return authState.user?.role === 'TEACHER';
   };
 
+  const isHead = (): boolean => {
+    return authState.user?.role === 'HEAD';
+  };
+
+  const isManagement = (): boolean => {
+    return authState.user?.role === 'MANAGEMENT';
+  };
+
   const isStudent = (): boolean => {
     return authState.user?.role === 'STUDENT';
+  };
+
+  // Permission checking methods based on backend permissions
+  const canManageUsers = (): boolean => {
+    return ['ADMIN', 'HEAD'].includes(authState.user?.role || '');
+  };
+
+  const canCreateCourses = (): boolean => {
+    return ['ADMIN', 'MANAGEMENT'].includes(authState.user?.role || '');
+  };
+
+  const canEditCourses = (): boolean => {
+    return ['ADMIN', 'MANAGEMENT'].includes(authState.user?.role || '');
+  };
+
+  const canUploadMaterials = (): boolean => {
+    return ['ADMIN', 'TEACHER', 'MANAGEMENT'].includes(authState.user?.role || '');
+  };
+
+  const canUploadLectures = (): boolean => {
+    return ['ADMIN', 'TEACHER', 'MANAGEMENT'].includes(authState.user?.role || '');
+  };
+
+  const canConductMeetings = (): boolean => {
+    return ['ADMIN', 'TEACHER', 'HEAD'].includes(authState.user?.role || '');
+  };
+
+  const canCreateNotices = (): boolean => {
+    return ['ADMIN', 'TEACHER', 'HEAD'].includes(authState.user?.role || '');
+  };
+
+  const canViewReports = (): boolean => {
+    return ['ADMIN', 'MANAGEMENT'].includes(authState.user?.role || '');
+  };
+
+  const canViewActivities = (): boolean => {
+    return ['ADMIN', 'HEAD'].includes(authState.user?.role || '');
   };
 
   return (
@@ -108,7 +167,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register,
       isAdmin,
       isTeacher,
-      isStudent
+      isHead,
+      isManagement,
+      isStudent,
+      canManageUsers,
+      canCreateCourses,
+      canEditCourses,
+      canUploadMaterials,
+      canUploadLectures,
+      canConductMeetings,
+      canCreateNotices,
+      canViewReports,
+      canViewActivities
     }}>
       {children}
     </AuthContext.Provider>

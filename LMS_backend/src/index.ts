@@ -13,6 +13,7 @@ const lectureRoutes = require('./routes/lectures');
 const meetingRoutes = require('./routes/meetings');
 const noticeRoutes = require('./routes/notices');
 const reportRoutes = require('./routes/reports');
+const activityRoutes = require('./routes/activities');
 
 // Load environment variables
 dotenv.config();
@@ -33,8 +34,7 @@ app.use(cors({
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
-    console.log('Request origin:', origin);
-    console.log('Allowed origins:', allowedOrigins);
+  
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -87,6 +87,7 @@ app.use('/api/lectures', lectureRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/activities', activityRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

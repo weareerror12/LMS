@@ -18,6 +18,14 @@ import CourseDetailsPage from './components/courses/CourseDetailsPage';
 import UserProfilePage from './components/profile/UserProfilePage';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 
+// Admin/Management Components
+import UserManagement from './components/admin/UserManagement';
+import CourseManagement from './components/admin/CourseManagement';
+import CourseAssignment from './components/admin/CourseAssignment';
+import MaterialManagement from './components/admin/MaterialManagement';
+import LectureManagement from './components/admin/LectureManagement';
+import SystemSettings from './components/admin/SystemSettings';
+
 const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
@@ -139,6 +147,268 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Admin/Management Routes */}
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <UserManagement />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/courses"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">Course Management</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <CourseManagement />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/course-assignments"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">Course Assignment</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <CourseAssignment />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/enrollments"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">Enrollment Management</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                      <p className="text-gray-600">Enrollment management functionality will be implemented here.</p>
+                    </div>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/materials"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">Material Management</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <MaterialManagement />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/lectures"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">Lecture Management</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <LectureManagement />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">Reports & Analytics</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                      <p className="text-gray-600">Reports and analytics functionality will be implemented here.</p>
+                    </div>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/activities"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">System Activities</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                      <h2 className="text-lg font-semibold mb-4">Recent System Activities</h2>
+                      {/* ActivityFeed component will be rendered here */}
+                      <p className="text-gray-600">Activity feed will be displayed here.</p>
+                    </div>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-gray-50">
+                  <header className="bg-white shadow-sm border-b">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            ← Back to Dashboard
+                          </button>
+                          <h1 className="text-xl font-semibold text-gray-900">System Settings</h1>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+                  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <SystemSettings />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

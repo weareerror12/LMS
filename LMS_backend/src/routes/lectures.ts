@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
 const { requireLectureUpload } = require('../middleware/roles');
@@ -22,7 +23,12 @@ const prisma = new PrismaClient();
 // Configure multer for video uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'));
+    const uploadDir = path.join(__dirname, '../../uploads');
+    // Ensure uploads directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -49,7 +55,7 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(null, false);
+      cb(new Error('Invalid file type'), false);
     }
   }
 });
@@ -312,5 +318,94 @@ router.get('/upcoming/:courseId', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Stream lecture video for viewing
+router.get('/:id/stream', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lecture = await prisma.lecture.findUnique({
+      where: { id }
+    });
+
+    if (!lecture) {
+      return res.status(404).json({ error: 'Lecture not found' });
+    }
+
+    if (!lecture.recordPath) {
+      return res.status(404).json({ error: 'No recording available for this lecture' });
+    }
+
+    if (STORAGE_TYPE === 's3' && isS3Configured()) {
+      // S3 Storage (commented out - uncomment when S3 is configured)
+      /*
+      try {
+        const signedUrl = await getSignedUrlForFile(lecture.recordPath);
+        res.redirect(signedUrl);
+      } catch (error) {
+        console.error('S3 signed URL error:', error);
+        res.status(500).json({ error: 'Failed to generate video stream link' });
+      }
+      */
+      // For now, fall back to local storage
+      const filePath = getLocalFilePath(lecture.recordPath);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Video file not found' });
+      }
+
+      // Get file extension to determine content type
+      const ext = path.extname(lecture.recordPath).toLowerCase();
+      const contentType = getVideoContentType(ext);
+
+      res.setHeader('Content-Disposition', `inline; filename="${lecture.title}${ext}"`);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Accept-Ranges', 'bytes');
+
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } else {
+      // Local storage (current active method)
+      const filePath = getLocalFilePath(lecture.recordPath);
+
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Video file not found' });
+      }
+
+      // Get file extension to determine content type
+      const ext = path.extname(lecture.recordPath).toLowerCase();
+      const contentType = getVideoContentType(ext);
+
+      // Set appropriate headers for video streaming
+      res.setHeader('Content-Disposition', `inline; filename="${lecture.title}${ext}"`);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Accept-Ranges', 'bytes');
+
+      // Stream the video file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    }
+
+  } catch (error) {
+    console.error('Stream lecture video error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Helper function to get video content type based on file extension
+function getVideoContentType(ext: string): string {
+  const videoContentTypes: { [key: string]: string } = {
+    '.mp4': 'video/mp4',
+    '.avi': 'video/avi',
+    '.mov': 'video/quicktime',
+    '.wmv': 'video/x-ms-wmv',
+    '.mkv': 'video/x-matroska',
+    '.webm': 'video/webm',
+    '.m4v': 'video/x-m4v',
+    '.flv': 'video/x-flv'
+  };
+
+  return videoContentTypes[ext] || 'video/mp4';
+}
 
 module.exports = router;

@@ -3,6 +3,7 @@ import { FileText, Video, Download, Edit, Trash2, Search, Loader2, Eye, EyeOff }
 import { Material, Course } from '../../types/api';
 import apiService from '../../services/api';
 import MaterialUpdate from '../ui/MaterialUpdate';
+import PDFViewer from '../ui/PDFViewer';
 
 const MaterialManagement: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -11,6 +12,8 @@ const MaterialManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -81,6 +84,20 @@ const MaterialManagement: React.FC = () => {
       console.error('Failed to download material:', error);
       setError('Failed to download material');
     }
+  };
+
+  const handleViewMaterial = (material: Material) => {
+    setSelectedMaterial(material);
+    setPdfViewerOpen(true);
+  };
+
+  const handleClosePdfViewer = () => {
+    setPdfViewerOpen(false);
+    setSelectedMaterial(null);
+  };
+
+  const isPDF = (filePath: string) => {
+    return filePath.toLowerCase().endsWith('.pdf');
   };
 
   const handleUpdateSuccess = () => {
@@ -210,6 +227,15 @@ const MaterialManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
+                        {isPDF(material.filePath) && (
+                          <button
+                            onClick={() => handleViewMaterial(material)}
+                            className="p-1 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded"
+                            title="View PDF"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDownload(material)}
                           className="p-1 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
@@ -258,6 +284,15 @@ const MaterialManagement: React.FC = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* PDF Viewer Modal */}
+      {pdfViewerOpen && selectedMaterial && (
+        <PDFViewer
+          materialId={selectedMaterial.id}
+          materialTitle={selectedMaterial.title}
+          onClose={handleClosePdfViewer}
+        />
       )}
     </div>
   );

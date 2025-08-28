@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import { Course, Material, Lecture, Meeting, Notice } from '../../types/api';
-import { BookOpen, Video, Calendar, FileText, Users, ArrowLeft, Download, ExternalLink } from 'lucide-react';
+import { BookOpen, Video, Calendar, FileText, Users, ArrowLeft, Download, ExternalLink, Play, Eye, Plus, MessageSquare, Upload } from 'lucide-react';
+import VideoPlayer from '../ui/VideoPlayer';
+import PDFViewer from '../ui/PDFViewer';
+import MeetingCreator from '../ui/MeetingCreator';
+import NoticeCreator from '../ui/NoticeCreator';
+import FileUpload from '../ui/FileUpload';
 
 const CourseDetailsPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -13,21 +18,28 @@ const CourseDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'materials' | 'lectures' | 'meetings' | 'notices'>('materials');
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const [showMeetingCreator, setShowMeetingCreator] = useState(false);
+  const [showNoticeCreator, setShowNoticeCreator] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+
+  const fetchCourseDetails = async () => {
+    if (!courseId) return;
+
+    try {
+      const courseData = await apiService.getCourse(courseId);
+      setCourse(courseData.course);
+    } catch (error) {
+      console.error('Failed to fetch course details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCourseDetails = async () => {
-      if (!courseId) return;
-
-      try {
-        const courseData = await apiService.getCourse(courseId);
-        setCourse(courseData.course);
-      } catch (error) {
-        console.error('Failed to fetch course details:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCourseDetails();
   }, [courseId]);
 
@@ -60,6 +72,11 @@ const CourseDetailsPage: React.FC = () => {
     return course.enrollments.some((enrollment: any) => enrollment.studentId === user.id);
   };
 
+  const isTeacher = () => {
+    if (!user || !course) return false;
+    return user.role === 'TEACHER' && course.teachers.some((teacher: any) => teacher.id === user.id);
+  };
+
   const handleEnroll = async () => {
     if (!course || !user) return;
 
@@ -73,6 +90,60 @@ const CourseDetailsPage: React.FC = () => {
       console.error('Failed to enroll:', error);
       alert('Failed to enroll in the course. Please try again.');
     }
+  };
+
+  const handleViewLecture = (lecture: Lecture) => {
+    setSelectedLecture(lecture);
+    setVideoPlayerOpen(true);
+  };
+
+  const handleCloseVideoPlayer = () => {
+    setVideoPlayerOpen(false);
+    setSelectedLecture(null);
+  };
+
+  const handleViewMaterial = (material: Material) => {
+    setSelectedMaterial(material);
+    setPdfViewerOpen(true);
+  };
+
+  const handleClosePdfViewer = () => {
+    setPdfViewerOpen(false);
+    setSelectedMaterial(null);
+  };
+
+  const handleCreateMeeting = () => {
+    setShowMeetingCreator(true);
+  };
+
+  const handleCreateNotice = () => {
+    setShowNoticeCreator(true);
+  };
+
+  const handleUploadMaterial = () => {
+    setShowFileUpload(true);
+  };
+
+  const handleMeetingCreated = () => {
+    setShowMeetingCreator(false);
+    // Refresh course data
+    fetchCourseDetails();
+  };
+
+  const handleNoticeCreated = () => {
+    setShowNoticeCreator(false);
+    // Refresh course data
+    fetchCourseDetails();
+  };
+
+  const handleUploadSuccess = () => {
+    setShowFileUpload(false);
+    // Refresh course data
+    fetchCourseDetails();
+  };
+
+  const isPDF = (filePath: string) => {
+    return filePath.toLowerCase().endsWith('.pdf');
   };
 
   if (loading) {
@@ -127,6 +198,35 @@ const CourseDetailsPage: React.FC = () => {
               }`}>
                 {course.active ? 'Active' : 'Inactive'}
               </span>
+
+              {/* Teacher Actions */}
+              {isTeacher() && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleCreateMeeting}
+                    className="flex items-center px-3 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                  >
+                    <Video className="w-4 h-4 mr-1" />
+                    Meeting
+                  </button>
+                  <button
+                    onClick={handleCreateNotice}
+                    className="flex items-center px-3 py-2 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 transition-colors text-sm"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Notice
+                  </button>
+                  <button
+                    onClick={handleUploadMaterial}
+                    className="flex items-center px-3 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors text-sm"
+                  >
+                    <Upload className="w-4 h-4 mr-1" />
+                    Upload
+                  </button>
+                </div>
+              )}
+
+              {/* Student Actions */}
               {!isEnrolled() && user?.role === 'STUDENT' && (
                 <button
                   onClick={handleEnroll}
@@ -231,13 +331,24 @@ const CourseDetailsPage: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDownload(material)}
-                          disabled={downloading === material.id}
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                        >
-                          {downloading === material.id ? 'Downloading...' : 'Download'}
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          {isPDF(material.filePath) && (
+                            <button
+                              onClick={() => handleViewMaterial(material)}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-md"
+                              title="View PDF"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDownload(material)}
+                            disabled={downloading === material.id}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                          >
+                            {downloading === material.id ? 'Downloading...' : 'Download'}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -266,6 +377,15 @@ const CourseDetailsPage: React.FC = () => {
                               <p className="text-sm text-green-600 mt-1">✓ Recording available</p>
                             )}
                           </div>
+                          {lecture.recordPath && (
+                            <button
+                              onClick={() => handleViewLecture(lecture)}
+                              className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                            >
+                              <Play className="w-4 h-4 mr-1" />
+                              Watch
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -328,6 +448,85 @@ const CourseDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Player Modal */}
+      {videoPlayerOpen && selectedLecture && (
+        <VideoPlayer
+          lectureId={selectedLecture.id}
+          title={selectedLecture.title}
+          onClose={handleCloseVideoPlayer}
+        />
+      )}
+
+      {/* PDF Viewer Modal */}
+      {pdfViewerOpen && selectedMaterial && (
+        <PDFViewer
+          materialId={selectedMaterial.id}
+          materialTitle={selectedMaterial.title}
+          onClose={handleClosePdfViewer}
+        />
+      )}
+
+      {/* Meeting Creator Modal */}
+      {showMeetingCreator && course && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <MeetingCreator
+              courses={[course]}
+              onMeetingCreated={handleMeetingCreated}
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowMeetingCreator(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notice Creator Modal */}
+      {showNoticeCreator && course && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <NoticeCreator
+              courses={[course]}
+              onNoticeCreated={handleNoticeCreated}
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowNoticeCreator(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Upload Modal */}
+      {showFileUpload && course && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <FileUpload
+              courses={[course]}
+              onUploadSuccess={handleUploadSuccess}
+              uploadType="material"
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowFileUpload(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

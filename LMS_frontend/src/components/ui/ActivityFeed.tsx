@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, User, Loader2, Clock, FileText, Video, Calendar, Bell } from 'lucide-react';
+import { Activity, Loader2, Clock, FileText, Video, Calendar, Bell } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
+import { User } from '../../types/api';
 
 interface ActivityItem {
   id: string;
@@ -18,6 +20,7 @@ interface ActivityFeedProps {
 }
 
 const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 10, showHeader = true }) => {
+  const { user, canViewActivities } = useAuth();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,37 +29,29 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 10, showHeader = tr
     const fetchActivities = async () => {
       try {
         setLoading(true);
-        // Note: This would need to be implemented in the API service
-        // For now, we'll create mock data
-        setActivities([
-          {
-            id: '1',
-            actorId: 'user1',
-            action: 'created',
-            entity: 'course',
-            entityId: 'course1',
-            createdAt: new Date(Date.now() - 3600000).toISOString(),
-            actor: { id: 'user1', name: 'John Doe', email: 'john@example.com', role: 'TEACHER' }
-          },
-          {
-            id: '2',
-            actorId: 'user2',
-            action: 'uploaded',
-            entity: 'material',
-            entityId: 'material1',
-            createdAt: new Date(Date.now() - 7200000).toISOString(),
-            actor: { id: 'user2', name: 'Jane Smith', email: 'jane@example.com', role: 'TEACHER' }
-          },
-          {
-            id: '3',
-            actorId: 'user3',
-            action: 'enrolled',
-            entity: 'course',
-            entityId: 'course2',
-            createdAt: new Date(Date.now() - 10800000).toISOString(),
-            actor: { id: 'user3', name: 'Bob Johnson', email: 'bob@example.com', role: 'STUDENT' }
+        setError('');
+
+        // Check if user has permission to view activities
+        if (!canViewActivities()) {
+          setError('You do not have permission to view activities');
+          setLoading(false);
+          return;
+        }
+
+        // Try to fetch recent activities (requires HEAD role)
+        try {
+          const response = await apiService.getRecentActivities(limit);
+          setActivities(response.activities);
+        } catch (apiError) {
+          // If user doesn't have HEAD role, try to fetch activities by their own actor ID
+          try {
+            const response = await apiService.getActivitiesByActor(user?.id || '', limit);
+            setActivities(response.activities);
+          } catch (actorError) {
+            // If that also fails, show a message about insufficient permissions
+            setError('Unable to load activities. Insufficient permissions.');
           }
-        ]);
+        }
       } catch (error) {
         console.error('Failed to fetch activities:', error);
         setError('Failed to load activities');
@@ -66,7 +61,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ limit = 10, showHeader = tr
     };
 
     fetchActivities();
-  }, [limit]);
+  }, [limit, user?.id, canViewActivities]);
 
   const getActivityIcon = (entity: string, action: string) => {
     switch (entity) {

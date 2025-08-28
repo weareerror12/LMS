@@ -110,6 +110,13 @@ const sampleStudents = [
   }
 ];
 
+const sampleAdmin = {
+  email: "admin@example.com",
+  password: "admin123",
+  name: "System Admin",
+  role: "ADMIN"
+};
+
 async function hashPassword(password) {
   const saltRounds = 10;
   return await bcrypt.hash(password, saltRounds);
@@ -141,6 +148,27 @@ async function seedComplete() {
         createdTeachers.push(existingTeacher);
         console.log(`📋 Teacher already exists: ${existingTeacher.name}`);
       }
+    }
+
+    // Create admin user
+    console.log('👑 Creating admin user...');
+    const existingAdmin = await prisma.user.findUnique({
+      where: { email: sampleAdmin.email }
+    });
+
+    let createdAdmin;
+    if (!existingAdmin) {
+      const hashedPassword = await hashPassword(sampleAdmin.password);
+      createdAdmin = await prisma.user.create({
+        data: {
+          ...sampleAdmin,
+          password: hashedPassword
+        }
+      });
+      console.log(`✅ Created admin: ${createdAdmin.name}`);
+    } else {
+      createdAdmin = existingAdmin;
+      console.log(`📋 Admin already exists: ${existingAdmin.name}`);
     }
 
     // Create sample students
@@ -286,13 +314,97 @@ async function seedComplete() {
     }
     console.log(`✅ Created ${sampleMeetings.length} sample meetings`);
 
+    // Create sample materials
+    console.log('📄 Creating sample materials...');
+    const sampleMaterials = [
+      {
+        title: "Hiragana Chart",
+        type: "STUDY_MATERIAL",
+        filePath: "/uploads/hiragana-chart.pdf",
+        courseId: "beginner"
+      },
+      {
+        title: "Katakana Practice",
+        type: "STUDY_MATERIAL",
+        filePath: "/uploads/katakana-practice.pdf",
+        courseId: "beginner"
+      },
+      {
+        title: "Basic Grammar Guide",
+        type: "STUDY_MATERIAL",
+        filePath: "/uploads/basic-grammar.pdf",
+        courseId: "elementary"
+      },
+      {
+        title: "Kanji Study Sheet",
+        type: "STUDY_MATERIAL",
+        filePath: "/uploads/kanji-sheet.pdf",
+        courseId: "elementary"
+      },
+      {
+        title: "Welcome Video",
+        type: "RECORDED_LECTURE",
+        filePath: "/uploads/welcome-video.mp4",
+        courseId: "beginner"
+      },
+      {
+        title: "Grammar Lesson 1",
+        type: "RECORDED_LECTURE",
+        filePath: "/uploads/grammar-lesson-1.mp4",
+        courseId: "elementary"
+      }
+    ];
+
+    for (const material of sampleMaterials) {
+      await prisma.material.create({
+        data: {
+          ...material,
+          uploadedBy: createdTeachers[0].id
+        }
+      });
+    }
+    console.log(`✅ Created ${sampleMaterials.length} sample materials`);
+
+    // Create sample lectures
+    console.log('🎥 Creating sample lectures...');
+    const sampleLectures = [
+      {
+        title: "Introduction to Japanese",
+        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+        courseId: "beginner"
+      },
+      {
+        title: "Basic Sentence Structure",
+        scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Day after tomorrow
+        courseId: "elementary"
+      },
+      {
+        title: "Kanji Reading Practice",
+        scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        courseId: "intermediate"
+      }
+    ];
+
+    for (const lecture of sampleLectures) {
+      await prisma.lecture.create({
+        data: {
+          ...lecture,
+          createdBy: createdTeachers[0].id
+        }
+      });
+    }
+    console.log(`✅ Created ${sampleLectures.length} sample lectures`);
+
     console.log('\n🎉 Database seeding completed successfully!');
     console.log('\n📊 Summary:');
+    console.log(`   👑 Admin: 1`);
     console.log(`   👨‍🏫 Teachers: ${createdTeachers.length}`);
     console.log(`   🎓 Students: ${createdStudents.length}`);
     console.log(`   📚 Courses: ${createdCourses.length}`);
     console.log(`   📝 Enrollments: ${createdStudents.length * 2}`);
-    console.log(`   📢 Notices: ${sampleNotices.length}`);
+    console.log(`   📄 Materials: ${sampleMaterials.length}`);
+    console.log(`   🎥 Lectures: ${sampleLectures.length}`);
+    console.log(`    Notices: ${sampleNotices.length}`);
     console.log(`   📅 Meetings: ${sampleMeetings.length}`);
 
     console.log('\n🔑 Sample Login Credentials:');

@@ -86,7 +86,8 @@ export const requireReportGeneration = requireRoles('MANAGEMENT', 'ADMIN');
 export const requireStudentView = requireRoles('ADMIN', 'HEAD', 'TEACHER', 'MANAGEMENT');
 
 // Legacy combined roles for backward compatibility
-const requireAdminOrHead = requireRoles('ADMIN', 'HEAD');
+const requireAdminOrTeacher = requireRoles('ADMIN', 'TEACHER','MANAGEMENT');
+const requireAdminOrHead = requireRoles('ADMIN','HEAD');
 const requireTeacherOrHead = requireRoles('TEACHER', 'HEAD');
 const requireManagementOrHead = requireRoles('MANAGEMENT', 'HEAD');
 const requireStaff = requireRoles('ADMIN', 'TEACHER', 'HEAD', 'MANAGEMENT');
@@ -99,13 +100,14 @@ module.exports = {
   requireHead,
   requireManagement,
   requireStudent,
-  requireAdminOrHead,
+  requireAdminOrTeacher,
   requireTeacherOrHead,
   requireManagementOrHead,
   requireStaff,
   requireAdminRoles,
   // New granular permissions
   requireAdminOnly,
+  requireAdminOrHead,
   requireTeacherOnly,
   requireHeadOnly,
   requireManagementOnly,

@@ -9,6 +9,8 @@ const CourseManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -77,6 +79,67 @@ const CourseManagement: React.FC = () => {
         ? prev.teacherIds.filter(id => id !== teacherId)
         : [...prev.teacherIds, teacherId]
     }));
+  };
+
+  const handleEditCourse = (course: any) => {
+    setEditingCourse(course);
+    setFormData({
+      title: course.title,
+      description: course.description || '',
+      teacherIds: course.teachers.map((t: any) => t.id),
+      active: course.active
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await apiService.updateCourse(editingCourse.id, formData);
+      await fetchCourses(); // Refresh the list
+      setIsEditModalOpen(false);
+      setEditingCourse(null);
+      setFormData({
+        title: '',
+        description: '',
+        teacherIds: [],
+        active: true
+      });
+    } catch (error) {
+      console.error('Failed to update course:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update course');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
+    if (!confirm(`Are you sure you want to delete the course "${courseTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiService.deleteCourse(courseId);
+      await fetchCourses(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to delete course:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete course');
+    }
+  };
+
+  const handleToggleActive = async (course: any) => {
+    try {
+      await apiService.updateCourse(course.id, { active: !course.active });
+      await fetchCourses(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to toggle course status:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update course status');
+    }
   };
 
   const getCourseStats = () => {
@@ -198,13 +261,25 @@ const CourseManagement: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-2 ml-4">
-                    <button className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md">
+                    <button
+                      onClick={() => handleEditCourse(course)}
+                      className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md"
+                      title="Edit course"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md">
+                    <button
+                      onClick={() => handleDeleteCourse(course.id, course.title)}
+                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md"
+                      title="Delete course"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md">
+                    <button
+                      onClick={() => handleToggleActive(course)}
+                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                      title={course.active ? "Deactivate course" : "Activate course"}
+                    >
                       {course.active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
@@ -322,6 +397,132 @@ const CourseManagement: React.FC = () => {
                     </>
                   ) : (
                     'Create Course'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Course Modal */}
+      {isEditModalOpen && editingCourse && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Course</h3>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingCourse(null);
+                  setFormData({
+                    title: '',
+                    description: '',
+                    teacherIds: [],
+                    active: true
+                  });
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCourse} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course Title *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assign Teachers
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-2">
+                  {users.map((teacher) => (
+                    <label key={teacher.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={formData.teacherIds.includes(teacher.id)}
+                        onChange={() => handleTeacherToggle(teacher.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-900">{teacher.name}</span>
+                      <span className="text-xs text-gray-500">({teacher.email})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit-active"
+                  checked={formData.active}
+                  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="edit-active" className="text-sm font-medium text-gray-700">
+                  Active (visible to students)
+                </label>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingCourse(null);
+                    setFormData({
+                      title: '',
+                      description: '',
+                      teacherIds: [],
+                      active: true
+                    });
+                  }}
+                  className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Course'
                   )}
                 </button>
               </div>

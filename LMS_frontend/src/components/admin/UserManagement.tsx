@@ -8,6 +8,8 @@ const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<'ADMIN' | 'TEACHER' | 'HEAD' | 'MANAGEMENT' | 'STUDENT'>('STUDENT');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -80,6 +82,68 @@ const UserManagement: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setFormData({
+      email: user.email,
+      password: '', // Don't pre-fill password for security
+      name: user.name,
+      role: user.role
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const updateData: any = {
+        email: formData.email,
+        name: formData.name,
+        role: formData.role
+      };
+
+      // Only include password if it's provided
+      if (formData.password.trim()) {
+        updateData.password = formData.password;
+      }
+
+      await apiService.updateUser(editingUser.id, updateData);
+      await fetchUsers(); // Refresh the list
+      setIsEditModalOpen(false);
+      setEditingUser(null);
+      setFormData({
+        email: '',
+        password: '',
+        name: '',
+        role: 'STUDENT'
+      });
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update user');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete the user "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiService.deleteUser(userId);
+      await fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete user');
     }
   };
 
@@ -201,10 +265,18 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Edit user"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete user"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -322,6 +394,130 @@ const UserManagement: React.FC = () => {
                     </>
                   ) : (
                     'Create User'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {isEditModalOpen && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingUser(null);
+                  setFormData({
+                    email: '',
+                    password: '',
+                    name: '',
+                    role: 'STUDENT'
+                  });
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password (leave empty to keep current)
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter new password"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role *
+                </label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="STUDENT">Student</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="HEAD">Head</option>
+                  <option value="MANAGEMENT">Management</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingUser(null);
+                    setFormData({
+                      email: '',
+                      password: '',
+                      name: '',
+                      role: 'STUDENT'
+                    });
+                  }}
+                  className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update User'
                   )}
                 </button>
               </div>

@@ -133,13 +133,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ materialId, materialTitle, onClos
         </div>
 
         {/* PDF Viewer */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <iframe
-            src={pdfUrl}
-            className="w-full h-full border-0 rounded"
-            title={materialTitle}
-          />
-        </div>
+<div className="flex-1 overflow-hidden">
+  <iframe
+    src={pdfUrl}
+    className="w-full h-[calc(95vh-64px)] border-0 rounded"
+    title={materialTitle}
+  />
+</div>
+
       </div>
     </div>
   );

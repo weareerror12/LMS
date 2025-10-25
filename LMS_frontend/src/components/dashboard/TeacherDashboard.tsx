@@ -130,33 +130,33 @@ const TeacherDashboard: React.FC = () => {
     setSelectedMaterial(null);
   };
 
-  const handleDownloadMaterial = async (materialId: string, fileName: string) => {
-    try {
-      const blob = await apiService.downloadMaterial(materialId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('Error downloading material:', err);
-    }
-  };
+  // const handleDownloadMaterial = async (materialId: string, fileName: string) => {
+  //   try {
+  //     const blob = await apiService.downloadMaterial(materialId);
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement('a');
+  //     a.href = url;
+  //     a.download = fileName;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     window.URL.revokeObjectURL(url);
+  //     document.body.removeChild(a);
+  //   } catch (err) {
+  //     console.error('Error downloading material:', err);
+  //   }
+  // };
 
-  const isPDF = (filePath: string) => {
-    return filePath.toLowerCase().endsWith('.pdf');
-  };
+  // const isPDF = (filePath: string) => {
+  //   return filePath.toLowerCase().endsWith('.pdf');
+  // };
 
-  return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-500 to-teal-600 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome, {user?.name}!</h1>
-        <p className="text-blue-100">Manage your classes and students</p>
-      </div>
+  // return (
+  //   <div className="space-y-6">
+  //     {/* Welcome Section */}
+  //     <div className="bg-gradient-to-r from-blue-500 to-teal-600 rounded-xl p-6 text-white">
+  //       <h1 className="text-2xl font-bold mb-2">Welcome, {user?.name}!</h1>
+  //       <p className="text-blue-100">Manage your classes and students</p>
+  //     </div>
 
       
 

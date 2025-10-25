@@ -236,13 +236,13 @@ const MaterialManagement: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
-                        <button
+                        {/* <button
                           onClick={() => handleDownload(material)}
                           className="p-1 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
                           title="Download"
                         >
                           <Download className="w-4 h-4" />
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => setEditingMaterial(material)}
                           className="p-1 text-green-600 hover:text-green-900 hover:bg-green-50 rounded"

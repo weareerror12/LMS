@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import apiService from '../../services/api';
 
 interface PDFViewerProps {
@@ -25,28 +25,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ materialId, materialTitle, onClos
       // Get the PDF blob for inline viewing
       const blob = await apiService.viewMaterial(materialId);
       const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
+      // Disable PDF viewer toolbar and controls
+      setPdfUrl(`${url}#toolbar=0&navpanes=0&scrollbar=0`);
     } catch (err) {
       console.error('Error loading PDF:', err);
       setError('Failed to load PDF. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDownload = async () => {
-    try {
-      const blob = await apiService.downloadMaterial(materialId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = materialTitle;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('Error downloading PDF:', err);
     }
   };
 
@@ -86,19 +71,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ materialId, materialTitle, onClos
             </button>
           </div>
           <p className="text-red-600 mb-4">{error}</p>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end">
             <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
             >
               Close
-            </button>
-            <button
-              onClick={handleDownload}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download Instead
             </button>
           </div>
         </div>
@@ -114,33 +92,23 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ materialId, materialTitle, onClos
           <h3 className="text-lg font-semibold text-gray-900 truncate pr-4">
             {materialTitle}
           </h3>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleDownload}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md"
-              title="Download PDF"
-            >
-              <Download className="w-5 h-5" />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md"
-              title="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* PDF Viewer */}
-<div className="flex-1 overflow-hidden">
-  <iframe
-    src={pdfUrl}
-    className="w-full h-[calc(95vh-64px)] border-0 rounded"
-    title={materialTitle}
-  />
-</div>
-
+        <div className="flex-1 overflow-hidden">
+          <iframe
+            src={pdfUrl}
+            className="w-full h-[calc(95vh-64px)] border-0 rounded"
+            title={materialTitle}
+          />
+        </div>
       </div>
     </div>
   );
